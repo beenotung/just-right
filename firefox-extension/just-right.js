@@ -15,23 +15,30 @@ function scanElement(e) {
     return;
   }
   let url = new URL(e.src);
-  let names = url.hostname.split(".");
-  if (
-    shouldSkipHostname(url.hostname) ||
-    shouldSkipPathname(url.pathname) ||
-    names.some((s) => s.startsWith("ad"))
-  ) {
-    console.log("remove", e.src);
-    e.remove();
-    return;
-  }
   if (
     location.hostname == url.hostname ||
     domainName(location.hostname) == domainName(url.hostname)
   ) {
-    return;
+    return; // from the original host
   }
+  let names = url.hostname.split(".");
+
+  if (shouldSkipHostname(url.hostname)) {
+    return remove(e, "hostname");
+  }
+  if (shouldSkipPathname(url.pathname)) {
+    return remove(e, "pathname");
+  }
+  if (names.some((s) => s.startsWith("ad"))) {
+    return remove(e, "part");
+  }
+
   console.log("?", url);
+}
+function remove(element, reason) {
+  console.log("remove", reason, element.src);
+  element.remove();
+  return;
 }
 
 let pathnameSkipList = toLines(`
