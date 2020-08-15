@@ -12,15 +12,13 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "npm run rawtest",
     "clean": "rimraf dist",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "postformat": "tslint -p . --fix",
     "prebuild": "npm run clean",
     "build": "tsc -p tsconfig.build.json",
-    "pretest": "npm run format && npm run build",
-    "rawtest": "ts-node test/index.ts && jest",
-    "prepublishOnly": "npm run rawtest && npm run build"
+    "test": "jest",
+    "prepublishOnly": "npm test && npm run build"
   },
   "husky": {
     "hook": {
