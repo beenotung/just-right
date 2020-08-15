@@ -3,7 +3,7 @@ import * as node_dns from "dns";
 const dns = require('native-dns');
 import {DnsRequest} from "../src/native-dns";
 
-const {NAME_TO_QTYPE, QTYPE_TO_NAME} = require('native-dns-packet/consts')
+const {QTYPE_TO_NAME} = require('native-dns-packet/consts')
 
 export function resolve(req: DnsRequest) {
   for (const question of req.question) {
@@ -15,6 +15,7 @@ export function resolve(req: DnsRequest) {
           address,
           ttl: 600,
         })
+        console.log('answer:', answer)
       }
     })
   }

@@ -1,15 +1,32 @@
 import express from 'express'
+import HttpStatus from 'http-status'
 import fetch from 'node-fetch'
-import {DnsRequest} from './native-dns'
+import { DnsRequest } from './native-dns'
 
 const Packet = require('native-dns-packet/packet')
 
-export function startDnsOverHttpsServer(port = 3000) {
+export interface DnsProxyOptions {
+  port: number
+  domainFilter: DomainFilter
+}
+
+/**
+ * @return true if the domain should be allowed
+ * @return false if the domain is banned
+ * return promise is also allowed
+ * */
+export type DomainFilter = (domainName: string) => boolean | Promise<boolean>
+
+export function startDnsOverHttpsServer(
+  options: DnsProxyOptions,
+): express.Express {
   const app = express()
-  app.listen(port, () => {
-    console.log('express listening on port', port)
+  app.listen(options.port, () => {
+    console.log('express listening on port', options.port)
   })
-  app.get('/dns-query', handleRequest)
+  app.get('/dns-query', (req, res) =>
+    handleRequest(req, res, options.domainFilter),
+  )
   app.get('/', (req, res) => {
     res.write('dns-over-https server')
     res.end()
@@ -17,27 +34,56 @@ export function startDnsOverHttpsServer(port = 3000) {
   return app
 }
 
-
 async function handleRequest(
   req: express.Request,
   res: express.Response,
-  next: Function,
+  domainFilter: DomainFilter,
 ) {
-  const dns = req.query.dns
-  if (typeof dns !== 'string') {
-    return next()
+  const dnsBase64 = req.query.dns
+  if (typeof dnsBase64 !== 'string') {
+    res.status(HttpStatus.BAD_REQUEST)
+    res.write('missing dns base64 string in the query params')
+    return res
   }
-  const buf = Buffer.from(dns, 'base64')
+  const buf = Buffer.from(dnsBase64, 'base64')
   const dnsRequest: DnsRequest = Packet.parse(buf)
-  console.log('q', dnsRequest.question)
+  for (const question of dnsRequest.question) {
+    const domain = question.name
+    let result = domainFilter(domain)
+    if (result === true) {
+      return resolveDns(res, dnsBase64)
+    }
+    if (result === false) {
+      return rejectDns(res, domain)
+    }
+    result = await result
+    if (result) {
+      return resolveDns(res, dnsBase64)
+    }
+    return rejectDns(res, domain)
+  }
+  await resolveDns(res, dnsBase64)
+}
+
+async function rejectDns(res: express.Response, domain: string) {
+  res.status(HttpStatus.NOT_ACCEPTABLE)
+  res.write(`domain '${domain}' is not allowed`)
+  res.end()
+}
+
+async function resolveDns(res: express.Response, dnsBase64: string) {
   try {
-    const response = await fetch('https://dns.google/dns-query?dns=' + dns)
-    const buf = Buffer.from(await response.arrayBuffer())
+    const response = await fetch(
+      'https://dns.google/dns-query?dns=' + dnsBase64,
+    )
+    const bin = await response.arrayBuffer()
+    const buf = Buffer.from(bin)
     res.write(buf)
     res.end()
-    return
   } catch (e) {
     console.log('failed to query dns from upstream', e)
-    return
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    res.write('failed to query dns: ' + e.toString())
+    res.end()
   }
 }

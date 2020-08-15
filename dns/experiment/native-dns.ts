@@ -4,7 +4,7 @@ import {DnsRequest, DnsResponse} from "../src/native-dns";
 const dns = require('native-dns');
 const server = dns.createServer();
 
-const {NAME_TO_QTYPE, QTYPE_TO_NAME} = require('native-dns-packet/consts')
+const {QTYPE_TO_NAME} = require('native-dns-packet/consts')
 
 
 server.on('request', function (request: DnsRequest, response: DnsResponse) {
