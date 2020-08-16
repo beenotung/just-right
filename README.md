@@ -26,3 +26,6 @@ I've tried NextDNS, it works quite well, however it cannot be self-hosted;
 I also tried PI-Hole but the UX on admin panel is not as good.
 
 Then, I checkout how to develop a DNS server. Turn out it's not as hard as it may sounds. So I'm working on this project in weekend-hacking manner.
+
+## Todo
+- consider to use lerna to manage this multi-package project
