@@ -1,9 +1,9 @@
 import dotenv from 'dotenv';
 import fs from 'fs'
-let env = dotenv.parse(fs.readFileSync('.env'));
+const env = dotenv.parse(fs.readFileSync('.env'));
 // Update with your config settings.
 
-let configs = {
+const configs = {
   development: {
     client: 'pg',
     connection: {

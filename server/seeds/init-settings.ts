@@ -4,7 +4,8 @@ import { DAY } from "@beenotung/tslib/time";
 
 export async function seed(knex: Knex): Promise<void> {
   // Deletes ALL existing entries
-  await knex("table_name").del();
+  await knex("setting").del();
+  await knex("blocklist").del();
 
   let list: [string, string[]][] = [
     ["goodbye-ads", [
@@ -30,7 +31,7 @@ export async function seed(knex: Knex): Promise<void> {
 
   let setting: Setting = {
     enable_logs: true,
-    log_client_id: true,
+    log_client_ip: true,
     log_domain: true,
     retention_ms: 30 * DAY
   };

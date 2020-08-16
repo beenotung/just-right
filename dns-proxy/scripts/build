@@ -1,0 +1,5 @@
+#!/bin/bash
+set -e
+set -o pipefail
+pnpm i || npm i
+npm run build
