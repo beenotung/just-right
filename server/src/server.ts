@@ -1,9 +1,11 @@
 import { attachDnsOverHttpsProxy } from 'dns-proxy'
 import express from 'express'
 import * as util from 'util'
-import { knex, tables } from './knex'
+import { loadConfig } from './config'
+import { knex, Query, tables } from './database'
+import { matchDnsRule } from './rule'
 import { startWebTunnel, stopWebTunnel } from './tunnel'
-import { Query, Setting } from './types'
+import { DnsRule } from './types'
 
 const log = require('debug')('app:server')
 log.enabled = true
@@ -16,15 +18,33 @@ export async function startServer(options: {
   close: () => Promise<void>
 }> {
   log('load setting')
-  const setting = await loadSetting()
+  const { setting, rules } = await loadConfig()
 
-  function domainFilter(domain: string): boolean | Promise<boolean> {
-    const query: Query = {}
-    if (setting.log_client_ip) {
-    }
-    if (setting.log_domain) {
+  // TODO pre-compute to optimize execution speed
+  function domainFilter(domain: string, req: express.Request): boolean {
+    const rule = matchDnsRule(domain, rules)
+    if (rule) {
+      save(rule)
+      return rule.allow
     }
     return true
+
+    function save(rule: DnsRule) {
+      const query: Query = {
+        blocked: rule.allow,
+        reason: rule.name,
+      }
+      if (setting.log_client_ip) {
+        query.client = req.header('X-Forwarded-For')
+      }
+      if (setting.log_domain) {
+        query.domain = domain
+      }
+      log('query:', query)
+      tables.query.insert(query).catch(e => {
+        log(`Error: failed to log query:`, e)
+      })
+    }
   }
 
   const app = express()
@@ -56,12 +76,4 @@ export async function startServer(options: {
       log('stopped dns-over-https server')
     },
   }
-}
-
-async function loadSetting(): Promise<Setting> {
-  const setting = await tables.setting.first()
-  if (!setting) {
-    throw new Error('missing setting')
-  }
-  return setting
 }

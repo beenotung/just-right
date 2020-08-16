@@ -1,6 +1,6 @@
 import * as Knex from "knex";
-import { BlockList, Setting } from "../src/types";
 import { DAY } from "@beenotung/tslib/time";
+import { BlockList, Setting } from '../src/database'
 
 export async function seed(knex: Knex): Promise<void> {
   // Deletes ALL existing entries
@@ -19,7 +19,7 @@ export async function seed(knex: Knex): Promise<void> {
       "https://github.com/justdomains/blocklists/blob/master/lists/easylist-justdomains.txt",
       "https://github.com/justdomains/blocklists/blob/master/lists/easyprivacy-justdomains.txt"]],
     ["disconnect-tracking", [
-      "https://raw.githubusercontent.com/disconnectme/disconnect-tracking-protection/master/entities.json",
+      // "https://raw.githubusercontent.com/disconnectme/disconnect-tracking-protection/master/entities.json",
       "https://github.com/disconnectme/disconnect-tracking-protection/blob/master/services.json"]]
   ];
 

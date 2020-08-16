@@ -1,5 +1,5 @@
-import { startServer } from '../src/server'
 import fetch from 'node-fetch'
+import { startServer } from '../src/server'
 
 describe('DNS-over-HTTPS Server TestSuit', () => {
   let dnsUrl: string

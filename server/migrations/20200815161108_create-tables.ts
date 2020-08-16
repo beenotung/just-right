@@ -9,9 +9,9 @@ export async function up(knex: Knex): Promise<void> {
     table.string("domain").nullable();
     // optional client IP
     table.string("client").nullable();
-    // null if allowed
-    // string if not allowed: (imported) blocklist / (custom) blacklist
-    table.string('blocked_by').nullable()
+    table.boolean('blocked').notNullable()
+    // e.g. blocklist, denylist, allowlist
+    table.string('reason').notNullable()
     table.timestamp("timestamp").notNullable().defaultTo(knex.fn.now());
   });
   await knex.schema.createTable('setting',table=>{
@@ -22,6 +22,7 @@ export async function up(knex: Knex): Promise<void> {
     table.bigInteger('retention_ms').nullable()
     table.timestamps(false,true)
   })
+  // DenyList and AllowList
   await knex.schema.createTable('rule',table=>{
     table.increments('id').primary()
     table.string('domain').notNullable()
